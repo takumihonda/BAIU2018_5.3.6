@@ -20,7 +20,7 @@ def main():
 
    import matplotlib.pyplot as plt
 
-   fig, ax1 = plt.subplots( 1, 1, figsize=( 6, 5.5 ) )
+   fig, ax1 = plt.subplots( 1, 1, figsize=( 8, 6.5 ) )
    fig.subplots_adjust( left=0.05, bottom=0.05, right=0.95, top=0.95,
                         wspace=0.1, hspace=0.3)
 
@@ -46,7 +46,12 @@ def main():
    print( lon.shape )
    SHADE = ax1.contourf( x2d, y2d, var, cmap=cmap, levels=levs,
                     extend='both' )
-   cb = plt.colorbar( SHADE )
+   pos = ax1.get_position()
+   cb_width = 0.015
+   cb_height = pos.height*0.98
+   ax_cb = fig.add_axes( [pos.x1, pos.y0+0.01, cb_width, cb_height] )
+   cb = plt.colorbar( SHADE, cax=ax_cb, orientation = 'vertical', ticks=levs )
+   cb.ax.tick_params( labelsize=8 )
    plt.show()
 
 main()
