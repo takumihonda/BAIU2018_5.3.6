@@ -1,9 +1,13 @@
 from netCDF4 import Dataset
 import numpy as np 
 
-from datetime import datetime
+import os
+from datetime import datetime, timedelta
 
 from tools_BAIU import prep_proj_multi
+
+quick = True
+#quick = False
 
 def main( time=datetime(2018, 7, 2, 0) ):
 
@@ -65,11 +69,30 @@ def main( time=datetime(2018, 7, 2, 0) ):
             va='bottom',
           )
 
-   plt.show()
+   ofig = "1p_olr_ainc_{0:}".format( time.strftime('%H%m%d') )
+   if not quick:
+      opath = "png/1p_ainc_olr"
+      os.makedirs( opath, exist_ok=True )
+
+      ofig = os.path.join(opath, ofig + ".png")
+      plt.savefig(ofig,bbox_inches="tight", pad_inches = 0.1)
+      print(ofig)
+      plt.clf()
+   else:
+      print(ofig)
+      plt.show()
+
+#######################
 
 time = datetime( 2018, 7, 2, 12, 0 )
-#time = datetime( 2018, 7, 2, 6, 0 )
-#time = datetime( 2018, 7, 2, 18, 0 )
-time = datetime( 2018, 7, 3, 0, 0 )
-main( time=time )
+time = datetime( 2018, 7, 2, 6, 0 )
+time = datetime( 2018, 7, 2, 18, 0 )
+#time = datetime( 2018, 7, 3, 0, 0 )
 
+stime = datetime( 2018, 7, 2, 0, 0 )
+etime = datetime( 2018, 7, 3, 0, 0 )
+
+time = stime
+while time <= etime:
+  main( time=time )
+  time += timedelta( hours=6 )

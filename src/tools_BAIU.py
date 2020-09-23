@@ -1057,3 +1057,20 @@ def get_olr( INFO, stime=datetime(2018,7,1), vtime=datetime(2018,7,1), m=1 ):
           olr = nc.variables["OLR"][:,:]
 
     return( olr )
+
+def read_obs_letkf( time ):
+    otop = "/data_ballantine02/miyoshi-t/honda/SCALE-LETKF/BAIU2018_5.3.6/ncepobs_letkf"
+
+    fn = os.path.join( otop, "obs_" + time.strftime('%Y%m%d%H%M%S.dat') )
+    print(fn)
+
+    infile = open( fn )
+    data = np.fromfile( infile, dtype=np.dtype('>f4') )
+    infile.close
+
+    nobs = int( data.shape[0]/(8+2) ) # wk(8) + header + footer in one record
+    #obs_all = np.zeros((8,nobs))
+    #obs_all = data.reshape(10,nobs)
+    obs_all = data.reshape(nobs,10)
+
+    return( obs_all[:,1:9] )
