@@ -21,7 +21,7 @@ TC = False
 
 def main( stime=datetime( 2018, 6, 30, 0), vtime_ref=datetime( 2018, 7, 6, 0 ),
           vtime=datetime( 2018, 7, 5, 0 ), nvar="RAIN", nvar2="MSLP", 
-          adt_h=24, cmem=10,
+          adt_h=24, cmem=10, dth2=0,
           hpa=950, hpa2=950 ):
 
     TOP = "/data_ballantine02/miyoshi-t/honda/SCALE-LETKF/BAIU2018_5.3.6"
@@ -86,10 +86,10 @@ def main( stime=datetime( 2018, 6, 30, 0), vtime_ref=datetime( 2018, 7, 6, 0 ),
 
     x2d, y2d = m_l[0](lon2d, lat2d)
 
-    dth = 0
+    dth_ = 0
     if nvar == "RAIN":
-       dth = adt_h
-    cmap, levs, unit, extend, nvar_, fac = def_cmap( nvar=nvar, hpa=hpa )
+       dth_ = dth2
+    cmap, levs, unit, extend, nvar_, fac = def_cmap( nvar=nvar, hpa=hpa, dth=dth_ )
 
     if nvar2 is not None:
        cmap2, levs2, unit2, extend2, nvar2_, fac2 = def_cmap( nvar=nvar2, hpa=hpa2 )
@@ -121,11 +121,11 @@ def main( stime=datetime( 2018, 6, 30, 0), vtime_ref=datetime( 2018, 7, 6, 0 ),
        for j, m in enumerate( pmem_l[i] ):
            print( "mem", m, j )
            if j == 0:
-              var_ = get_var( INFO, nvar=nvar, stime=stime, vtime=vtime, m=m+1, adt=timedelta( hours=dth ), hpa=hpa )
-              var2_ = get_var( INFO, nvar=nvar2, stime=stime, vtime=vtime, m=m+1, adt=timedelta( hours=dth ), hpa=hpa2 )
+              var_ = get_var( INFO, nvar=nvar, stime=stime, vtime=vtime, m=m+1, adt=timedelta( hours=dth_ ), hpa=hpa )
+              var2_ = get_var( INFO, nvar=nvar2, stime=stime, vtime=vtime, m=m+1, adt=timedelta( hours=0 ), hpa=hpa2 )
            else:
-              var_ += get_var( INFO, nvar=nvar, stime=stime, vtime=vtime, m=m+1, adt=timedelta( hours=dth ), hpa=hpa )
-              var2_ += get_var( INFO, nvar=nvar2, stime=stime, vtime=vtime, m=m+1, adt=timedelta( hours=dth ), hpa=hpa2 )
+              var_ += get_var( INFO, nvar=nvar, stime=stime, vtime=vtime, m=m+1, adt=timedelta( hours=dth_ ), hpa=hpa )
+              var2_ += get_var( INFO, nvar=nvar2, stime=stime, vtime=vtime, m=m+1, adt=timedelta( hours=0 ), hpa=hpa2 )
 
        var_ = var_ / cmem
        var2_ = var2_ / cmem
@@ -241,6 +241,7 @@ vtime_l = [
            datetime( 2018, 7, 4, 0, 0 ),
            datetime( 2018, 7, 5, 0, 0 ),
            datetime( 2018, 7, 6, 0, 0 ),
+           datetime( 2018, 7, 7, 0, 0 ),
           ]
 
 
@@ -281,11 +282,14 @@ hpa_l = [ 950, 950, 950, 950, 500, 500, 300, 850, 500, 300, 850, 500, 300 ]
 
 nvar_l = [
           #"OLR", 
-          "Q1_vg", 
+          #"Q1_vg", 
+          #"VORT", 
+          "RAIN", 
          ]
 
 nvar2_l = [
-          "Z", 
+          "MSLP", 
+          #"Z", 
           ]
  
 hpa_l = [  
@@ -299,6 +303,8 @@ vtime_ref = datetime( 2018, 7, 6, 0 )
 adt_h = 48
 vtime_ref = datetime( 2018, 7, 7, 0 )
 
+# only for RAIN
+dth2 = 48
 
 for vtime in  vtime_l:
     for i, nvar in enumerate( nvar_l ):
@@ -308,5 +314,5 @@ for vtime in  vtime_l:
         hpa2 = hpa
     
         main( stime=stime, vtime_ref=vtime_ref, vtime=vtime, nvar=nvar, nvar2=nvar2, 
-              hpa=hpa, hpa2=hpa2, adt_h=adt_h, )
+              hpa=hpa, hpa2=hpa2, adt_h=adt_h, dth2=dth2)
 

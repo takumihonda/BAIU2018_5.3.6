@@ -146,6 +146,8 @@ def get_arain( INFO, stime=datetime(2018,7,1), vtime=datetime(2018,7,1),
 
        # 
        rain = np.sum( nc.variables["PREC"][idx_s+1:idx_e+1,:,:], axis=0 )*21600
+       if ft_min < 0:
+          rain[:] = np.nan
 
 #    print( rain.shape )
 #    print( ft_max, ft_min, idx_s, idx_e )
@@ -679,11 +681,13 @@ def get_var( INFO, nvar="PW", stime=datetime(2018,7,1), vtime=datetime(2018,7,1)
     elif nvar == "Q1":
        var_ = get_q1( INFO, stime=stime, vtime=vtime, m=m, hpa=hpa ) 
     elif nvar == "Q1_vg":
-       hpa1 = 700
+       hpa1 = 500
        hpa2 = 850
        var1_ = get_q1( INFO, stime=stime, vtime=vtime, m=m, hpa=hpa1 ) 
        var2_ = get_q1( INFO, stime=stime, vtime=vtime, m=m, hpa=hpa2 )
        var_ = ( var1_ - var2_ ) / ( ( hpa1 - hpa2 ) * 1.e2 )
+    elif nvar == "VORT":
+       _, var_ = get_hdiv_curl( INFO, stime=stime, vtime=vtime, m=m, hpa=hpa )
     elif nvar == "Z":
        var_ = get_gph( INFO, stime=stime, vtime=vtime, m=m, hpa=hpa ) 
     elif nvar == "RH":
@@ -863,7 +867,7 @@ def get_q1( INFO, stime=datetime(2018,7,1), vtime=datetime(2018,7,1), m=1, hpa=5
        q1 = cp * dTdt_ - cp * ( omega_ * sigma_ - u_ * dTdx_ * rDX - v_ * dTdy_ * rDX )
     return( q1 )
 
-def def_cmap( nvar="RAIN", hpa=950 ):
+def def_cmap( nvar="RAIN", hpa=950, dth=24 ):
 
     fac = 1.0
     extend = "max"
@@ -871,12 +875,19 @@ def def_cmap( nvar="RAIN", hpa=950 ):
     tvar = nvar
     if nvar == "RAIN":
        levs = np.arange( 10, 155, 5 )
-       unit = "(mm/24h)"
+       unit = "(mm/{0:}h)".format( dth )
 
     elif nvar == "Q1_vg":
        levs = np.arange( -100, 105, 5 )
        unit = "()"
        fac = 1.e6
+       extend = "both"
+       cmap = plt.cm.get_cmap("RdBu_r")
+
+    elif nvar == "VORT":
+       levs = np.arange( -10, 12, 2 )
+       unit = r'(10$^5$s$^{-1}$)'
+       fac = 1.e5
        extend = "both"
        cmap = plt.cm.get_cmap("RdBu_r")
 

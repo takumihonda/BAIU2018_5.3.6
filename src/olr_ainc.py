@@ -1,12 +1,16 @@
 from netCDF4 import Dataset
 import numpy as np 
 
+from datetime import datetime
+
 from tools_BAIU import prep_proj_multi
 
-def main():
+def main( time=datetime(2018, 7, 2, 0) ):
 
-   anal = "/data_ballantine02/miyoshi-t/honda/SCALE-LETKF/BAIU2018_5.3.6/20180703000000/fcst_sno_np00001/mean/p_history.pe000000.nc"
-   gues = "/data_ballantine02/miyoshi-t/honda/SCALE-LETKF/BAIU2018_5.3.6/20180703000000/fcst_sno_np00001/mean_gues/p_history.pe000000.nc"
+   ctime = time.strftime('%Y%m%d%H%M%S')
+
+   anal = "/data_ballantine02/miyoshi-t/honda/SCALE-LETKF/BAIU2018_5.3.6/{0:}/fcst_sno_np00001/mean/p_history.pe000000.nc".format( ctime )
+   gues = "/data_ballantine02/miyoshi-t/honda/SCALE-LETKF/BAIU2018_5.3.6/{0:}/fcst_sno_np00001/mean_gues/p_history.pe000000.nc".format( ctime )
 
    with Dataset( anal, "r", format="NETCDF4") as nc:
        olra = nc.variables["OLR"][0,:,:]
@@ -52,7 +56,20 @@ def main():
    ax_cb = fig.add_axes( [pos.x1, pos.y0+0.01, cb_width, cb_height] )
    cb = plt.colorbar( SHADE, cax=ax_cb, orientation = 'vertical', ticks=levs )
    cb.ax.tick_params( labelsize=8 )
+
+
+   tit = "OLR analysis increment at {0:}".format( time.strftime('%HUTC %m/%d/%Y') )
+   ax1.text( 0.5, 1.01, tit,
+            fontsize=12, transform=ax1.transAxes,
+            ha='center',
+            va='bottom',
+          )
+
    plt.show()
 
-main()
+time = datetime( 2018, 7, 2, 12, 0 )
+#time = datetime( 2018, 7, 2, 6, 0 )
+#time = datetime( 2018, 7, 2, 18, 0 )
+time = datetime( 2018, 7, 3, 0, 0 )
+main( time=time )
 
