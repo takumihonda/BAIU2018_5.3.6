@@ -8,34 +8,18 @@ import sys
 import matplotlib.pyplot as plt
 from mpl_toolkits.basemap import Basemap
 
-from tools_BAIU import read_obs_letkf, prep_proj_multi
+from tools_BAIU import read_obs_letkf, read_obsdep_letkf, prep_proj_multi
 
 quick = True
 quick = False
 
 
 
-def read_obsdep_letkf( time ):
-    otop = "/data15/honda/SCALE-LETKF/scale-5.2.5/OUTPUT/BAIU2018_D1/exp_d1"
-
-    idir = os.path.join( otop, time.strftime('%Y%m%d%H%M%S'), "obs" )
-    fn = os.path.join( idir, "obsdep.dat" )
-    print( fn )
-
-    infile = open( fn )
-    data = np.fromfile( infile, dtype=np.dtype('>f4') )
-    infile.close
-
-    nobs = int( data.shape[0]/(11+2) ) # wk(11) + header + footer in one record
-    #obs_all = np.zeros((8,nobs))
-    #obs_all = data.reshape(10,nobs)
-    obsdep_all = data.reshape(nobs,13)
-
-    return( obsdep_all[:,1:12] )
 
 def main(time):
 
-    obs_all = read_obs_letkf(time)
+    #obs_all = read_obs_letkf(time)
+    obs_all = read_obsdep_letkf( time )
 
 
     print( "# of Obs: ", len( obs_all[:,0] ) )
@@ -60,8 +44,8 @@ def main(time):
                  'TMPAPR', 'PHARAD', 'H08IRB', 'TCVITL' 
                  ]
     obstype_l = np.arange( 1, 25, 1 )
-    obstype_c = [ 'r','brown','purple','y','k',
-                  'darkorange','lime','b','g','w',
+    obstype_c = [ 'cyan','brown','purple','y','k',
+                  'r','lime','b','g','w',
                   'w','w','w','w','w',
                   'w','w','w','w','aqua',
                   'w','w','w','w' ]
@@ -79,17 +63,19 @@ def main(time):
        xs, ys = m_l[0]( obs_all[idx_tmp,1], obs_all[idx_tmp,2] )
        if len(idx_tmp[0]) > 0:
          total += len(idx_tmp[0])
-         ms = 10.0
-         ec = 'w'
+         ms = 2.0
+         ec = None
          if len(idx_tmp[0]) < 15000:
             ms = 30.0
             if obstype_n[otyp] == "ADPSFC":
-               ms = 10.0
+               ms = 5.0
             elif obstype_n[otyp] == "ADPUPA":
-               ms = 40.0
+               ms = 20.0
                ec = None
             elif obstype_n[otyp] == "SFCSHP":
                ms = 15.0
+            elif obstype_n[otyp] == "VADWND":
+               ms = 40.0
 
 
          ax1.scatter( xs, ys, c=obstype_c[otyp], s=ms,
@@ -101,9 +87,9 @@ def main(time):
     LEG = ax1.legend(loc='upper right')
     LEG.get_frame().set_alpha(0.8)
 
-    tit = time.strftime('%HUTC %m/%d/%Y')
+    tit = "Assimilated observations at {0:}".format( time.strftime('%HUTC %m/%d/%Y') )
 
-    fig.suptitle(tit, fontsize=15)
+    fig.suptitle(tit, fontsize=14)
 
     ofig = "1p_obs_" + time.strftime('%m%d%H') 
 
@@ -111,8 +97,8 @@ def main(time):
     if not quick:
        opath = "png/1p_obs"
        os.makedirs( opath, exist_ok=True )
-       ofig = os.path.join(opath, ofig + ".png")
-       plt.savefig(ofig,bbox_inches="tight", pad_inches = 0.1)
+       ofig = os.path.join( opath, ofig + ".png" )
+       plt.savefig( ofig, bbox_inches="tight", pad_inches = 0.1 )
        print(ofig)
        plt.clf()
     else:
@@ -125,8 +111,8 @@ def main(time):
 
 
 
-stime = datetime( 2018, 7, 2, 0 )
-etime = datetime( 2018, 7, 4, 0 )
+stime = datetime( 2018, 7, 2, 6 )
+etime = datetime( 2018, 7, 3, 0 )
 #etime = stime
 
 time = stime

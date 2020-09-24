@@ -1074,3 +1074,22 @@ def read_obs_letkf( time ):
     obs_all = data.reshape(nobs,10)
 
     return( obs_all[:,1:9] )
+
+def read_obsdep_letkf( time ):
+    otop = "/data_ballantine02/miyoshi-t/honda/SCALE-LETKF/BAIU2018_5.3.6"
+
+    idir = os.path.join( otop, time.strftime('%Y%m%d%H%M%S'), "obs" )
+    fn = os.path.join( idir, "obsdep.dat" )
+    print( fn )
+
+    infile = open( fn )
+    data = np.fromfile( infile, dtype=np.dtype('>f4') )
+    infile.close
+
+    nobs = int( data.shape[0]/(11+2) ) # wk(11) + header + footer in one record
+    #obs_all = np.zeros((8,nobs))
+    #obs_all = data.reshape(10,nobs)
+    obsdep_all = data.reshape(nobs,13)
+
+    return( obsdep_all[:,1:12] )
+
