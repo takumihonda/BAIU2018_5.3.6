@@ -305,7 +305,7 @@ stime_l = [ datetime( 2018, 7, 1, 0), datetime( 2018, 7, 2, 0) ]
 stime_l = [ datetime( 2018, 7, 1, 0), ]
 stime_l = [ datetime( 2018, 7, 2, 0), ]
 
-stime_l = [ datetime( 2018, 7, 3, 0), ]
+#stime_l = [ datetime( 2018, 7, 3, 0), ]
 
 rvar = "PW"
 rvar = "RAIN"
@@ -355,6 +355,7 @@ vtime_l = [
           ]
 
 vtime_l = [ 
+            datetime( 2018, 7, 2, 18),
             datetime( 2018, 7, 5, 0), datetime( 2018, 7, 4, 0 ),
             datetime( 2018, 7, 3, 0), datetime( 2018, 7, 6, 0 ), 
             datetime( 2018, 7, 7, 0),
@@ -363,6 +364,7 @@ vtime_l = [
 
 tvar_l = [ "OLR", ]
 tvar_l = [ "Q1", ]
+tvar_l = [ "MSLP", ]
 hpa_l = [ 500, ]
 
 #vtime_l = [ datetime( 2018, 7, 5, 12), datetime( 2018, 7, 4, 12), datetime( 2018, 7, 3, 12) ]

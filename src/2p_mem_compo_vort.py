@@ -14,10 +14,8 @@ from tools_BAIU import get_lonlat, prep_proj_multi, get_arain, get_var, def_cmap
 from scipy.interpolate import griddata
 
 quick = True   
-quick = False
+#quick = False
 
-TC = True
-TC = False
 
 def main( stime=datetime( 2018, 6, 30, 0), vtime_ref=datetime( 2018, 7, 6, 0 ),
           vtime=datetime( 2018, 7, 5, 0 ), nvar="RAIN", nvar2="MSLP", 
@@ -60,8 +58,8 @@ def main( stime=datetime( 2018, 6, 30, 0), vtime_ref=datetime( 2018, 7, 6, 0 ),
     print( mem_l )
     print( rain_l )
 
-    ptit_l = [ "Best {0:}".format( cmem ),
-               "Worst {0:}".format( cmem ), ]
+    ptit_l = [ "Best {0:} - mean".format( cmem ),
+               "Worst {0:} - mean".format( cmem ), ]
  
     pmem_l = [ 
                mem_l[0:cmem],  
@@ -78,6 +76,12 @@ def main( stime=datetime( 2018, 6, 30, 0), vtime_ref=datetime( 2018, 7, 6, 0 ),
     lone = 165 - 6
     late = 50
     lats = 16
+
+    lons = 120
+    lone = 151
+    late = 42
+    lats = 20
+
 
     #ax_l = [ ax1, ax2, ax3, ax4, ]# ax5, ax6 ]
     ax_l = [ ax1, ax2, ] # ax5, ax6 ]
@@ -103,6 +107,32 @@ def main( stime=datetime( 2018, 6, 30, 0), vtime_ref=datetime( 2018, 7, 6, 0 ),
        lw = 1.0
 #    lc = 'w'
 
+    print( "get mean" )
+    for m in range( len( mem_l ) ):
+        print( m+1 )
+        if m == 0:
+           mvar_ = get_var( INFO, nvar=nvar, stime=stime, vtime=vtime, m=m+1, adt=timedelta( hours=dth_ ), hpa=hpa )
+           mvar2_ = get_var( INFO, nvar=nvar2, stime=stime, vtime=vtime, m=m+1, adt=timedelta( hours=dth_ ), hpa=hpa )
+        else:
+           mvar_ += get_var( INFO, nvar=nvar, stime=stime, vtime=vtime, m=m+1, adt=timedelta( hours=dth_ ), hpa=hpa )
+           mvar2_ += get_var( INFO, nvar=nvar2, stime=stime, vtime=vtime, m=m+1, adt=timedelta( hours=dth_ ), hpa=hpa )
+
+    mvar_ = mvar_ / len( mem_l )
+    mvar2_ = mvar2_ / len( mem_l )
+
+    clevs = np.arange( -40, 45, 5 )
+    clevs = np.arange( -20, 24, 4 )
+
+    if nvar == "HDIV":
+       clevs = np.arange( -5, 6, 1 )
+
+    cmap = plt.cm.get_cmap("RdBu_r")
+    extend = "both"
+
+#    levs2 = np.arange( -20, -20, 40)
+    #levs2 = [ -10, -5 ]
+#    levs2 = [  -10, 10 ]
+    fac2 = 1.0
 
     for i, ax in enumerate( ax_l ):
 #       m = pmem_l[i]
@@ -129,51 +159,15 @@ def main( stime=datetime( 2018, 6, 30, 0), vtime_ref=datetime( 2018, 7, 6, 0 ),
 
        var_ = var_ / cmem
        var2_ = var2_ / cmem
-       SHADE = ax.contourf( x2d, y2d, var_*fac, 
-                            cmap=cmap, levels=levs, extend=extend )
+       SHADE = ax.contourf( x2d, y2d, ( var_ - mvar_ )*fac, 
+                            cmap=cmap, levels=clevs, extend=extend )
 
-       CONT = ax.contour( x2d, y2d, var2_*fac2, colors=lc,
-                          linewidths=lw, levels=levs2 )
+       #CONT = ax.contour( x2d, y2d, ( var2_ - mvar2_ )*fac2, colors=lc,
+       CONT = ax.contour( x2d, y2d,  mvar2_*fac2, colors=lc,
+                          linewidths=lw, levels=levs2, linestyles="solid" )
       
-       ax.clabel( CONT, fontsize=6, fmt='%.0f' )
+#       ax.clabel( CONT, fontsize=6, fmt='%.0f' )
  
-       if TC:
-          time_l = []
-          tcx_l = []
-          tcy_l = []
-          stime_ = vtime - timedelta( days=3 )
-          time = vtime
-          while time >= stime_:
-              mslp_ = get_var( INFO, nvar="MSLP", stime=stime, vtime=time, m=m+1,)
-              mslp_[ lon2d < 126.0 ] = np.nan
-              cy, cx = np.unravel_index( np.nanargmin(mslp_), mslp_.shape ) 
-              tcx, tcy = m_l[0]( lon2d[cy,cx], lat2d[cy,cx] )
-              tcx_l.append( tcx )
-              tcy_l.append( tcy )
-              time_l.append( time )
-              time -= timedelta( hours=6 )
-#          print( lon2d[cy,cx], lat2d[cy,cx] )
-          ax.plot( tcx_l, tcy_l, markersize=3, linewidth=2.0,
-                   color='cyan', marker='o' )
-
-          xof = -72
-          yof = 10
-
-          arrowprops = dict(
-             arrowstyle="->",
-             connectionstyle="angle,angleA=0,angleB=-45,rad=10",
-             color='cyan')
-
-          for j, time in enumerate( time_l ):
-             if j % 4 != 0:
-                continue
-             ax.annotate( "{0:}".format( time.strftime('%HUTC %m/%d') ),
-                           xy=( tcx_l[j], tcy_l[j] ),
-                           xytext=( xof, yof ),
-                           textcoords='offset points', #"'offset points', 
-                           arrowprops=arrowprops,
-                           fontsize=6,
-                           bbox=bbox )
 
        draw_rec( m_l[0], ax, slon, elon, slat, elat,
                  c='k', lw=1.0, ls='solid' )
@@ -185,7 +179,7 @@ def main( stime=datetime( 2018, 6, 30, 0), vtime_ref=datetime( 2018, 7, 6, 0 ),
           cb_height = pos.height*0.9
           ax_cb = fig.add_axes( [pos.x1+0.005, pos.y1-cb_height, cb_width, cb_height] )
           cb = plt.colorbar( SHADE, cax=ax_cb, 
-                             orientation = 'vertical', ticks=levs[::2] )
+                             orientation = 'vertical', ticks=clevs[::1] )
           cb.ax.tick_params( labelsize=7 )
 
           ax.text( 0.95, 1.01, unit,
@@ -203,7 +197,7 @@ def main( stime=datetime( 2018, 6, 30, 0), vtime_ref=datetime( 2018, 7, 6, 0 ),
 
  
     if nvar2 is not None:
-       ofig = "2p_{0:}_{1:}_{2:}_adt{3:0=3}".format( nvar_, nvar2_, vtime.strftime('v%m%d%H'), adt_h, )
+       ofig = "2p_difm_{0:}_{1:}_{2:}_adt{3:0=3}".format( nvar_, nvar2_, vtime.strftime('v%m%d%H'), adt_h, )
        gtit = "{0:} & {1:}, init:{2:}, valid:{3:}".format( nvar_, nvar2_, stime.strftime('%HUTC %m/%d'), vtime.strftime('%HUTC %m/%d') )
     else:
        ofig = "4p_{0:}_{1:}_{2:0=3}".format( nvar_, vtime.strftime('v%H%m%d'), adt_h )
@@ -247,58 +241,26 @@ vtime_l = [
           ]
 
 
-nvar_l = [
-          "PW", 
-          "RAIN", 
-          "THE", 
-          "QV", 
-          "QV", 
-          "T", 
-          "T", 
-          "U", 
-          "U", 
-          "U", 
-          "V", 
-          "V", 
-          "V", 
-          ]
-
-nvar2_l = [
-          "MSLP", 
-          "MSLP", 
-          "Z", 
-          "MSLP", 
-          "Z", 
-          "Z", 
-          "Z", 
-          "Z", 
-          "Z", 
-          "Z", 
-          "Z", 
-          "Z", 
-          "Z", 
-          ]
-
-hpa_l = [ 950, 950, 950, 950, 500, 500, 300, 850, 500, 300, 850, 500, 300 ]
 
 
 nvar_l = [
           #"OLR", 
           #"Q1_vg", 
-          "VORT", 
-          #"RAIN", 
           #"HDIV", 
+          "VORT", 
+          #"V", 
          ]
 
 nvar2_l = [
-          "MSLP", 
+          "Z", 
           #"Z", 
           ]
  
 hpa_l = [  
-          #850, 
-          950, 
+          850, 
           #500, 
+          #700, 
+          #950, 
         ]
 
 adt_h = 24

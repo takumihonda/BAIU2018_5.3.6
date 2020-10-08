@@ -23,7 +23,8 @@ def main( stime=datetime( 2018, 6, 30, 0),
           adt_h=24, cmem=10, dth2=0,
           hpa=950, hpa2=950 ):
 
-    TOP = "/data_ballantine02/miyoshi-t/honda/SCALE-LETKF/BAIU2018_5.3.6"
+    #TOP = "/data_ballantine02/miyoshi-t/honda/SCALE-LETKF/BAIU2018_5.3.6/NOVADWND"
+    TOP = "/data_ballantine02/miyoshi-t/honda/SCALE-LETKF/BAIU2018_5.3.6/NOADPSFC"
     
     ptit_l = [ "{0:}-h RAIN {1:}".format( adt_h, vtime.strftime('%H UTC%m/%d'), ), 
                "OLR & MSLP {0:}".format( ovtime.strftime('%HUTC%m/%d'), ) ]
@@ -152,7 +153,8 @@ def main( stime=datetime( 2018, 6, 30, 0),
     fig.suptitle( gtit, fontsize=12)
 
     if not quick:
-       opath = "png/2p_mrain_olr"
+       #opath = "png/2p_mrain_olr_NOVADWND"
+       opath = "png/2p_mrain_olr_NOADPSFC"
        os.makedirs(opath, exist_ok=True)
      
        ofig = os.path.join(opath, ofig + ".png")
@@ -204,11 +206,7 @@ stime = datetime( 2018, 7, 2, 12 )
 #stime = datetime( 2018, 7, 2, 0 )
 
 stime_l = [ 
-            #datetime( 2018, 7, 2, 0,), 
-            #datetime( 2018, 7, 2, 6,),
-            datetime( 2018, 7, 2, 12,),
             datetime( 2018, 7, 2, 18,),
-            datetime( 2018, 7, 3, 0,),
           ]
 
 vtime = datetime( 2018, 7, 7, 0, 0 )

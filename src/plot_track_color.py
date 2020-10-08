@@ -12,7 +12,7 @@ from tools_BAIU import get_lonlat, get_var, prep_proj_multi, get_prapiroon, conv
 
 
 quick = True   
-quick = False
+#quick = False
 
 if quick:
    res="c"

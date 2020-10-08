@@ -9,11 +9,11 @@ import sys
 import matplotlib.pyplot as plt
 from mpl_toolkits.basemap import Basemap
  
-from tools_BAIU import get_lonlat, prep_proj_multi, get_arain, def_cmap, get_var, get_grads_JMA
+from tools_BAIU import get_lonlat, prep_proj_multi, get_arain, def_cmap, get_var, get_grads_JMA, draw_rec
 
 
 quick = True   
-#quick = False
+quick = False
 
 
 if quick:
@@ -22,9 +22,12 @@ else:
    res="l"
 
 def main( stime_l=[],
-          vtime=datetime( 2018, 7, 5, 0 ), nvar="PW", hpa=500 ):
+          vtime=datetime( 2018, 7, 5, 0 ), nvar="PW", hpa=500, adth=48,
+          slon=130.0, elon=137.5,
+          slat=33.0, elat=36.0,
+          vtime_slp=datetime( 2018, 7, 5, 0)  ):
 
-    adt = timedelta( hours=24 )
+    adt = timedelta( hours=adth )
 
 
     TOP = "/data_ballantine02/miyoshi-t/honda/SCALE-LETKF/BAIU2018_5.3.6"
@@ -37,10 +40,12 @@ def main( stime_l=[],
 
     lon2d, lat2d = get_lonlat( INFO, stime=datetime( 2018, 7, 1, 0 ) )
 
-    fig, ((ax1,ax2,ax3,ax4),(ax5,ax6,ax7,ax8)) = plt.subplots( 2, 4, figsize=( 14, 6.0 ) )
-    fig.subplots_adjust( left=0.03, bottom=0.03, right=0.96, top=0.95,
-                         wspace=0.1, hspace=0.02)
         
+    fig, ((ax1,ax2,ax5), (ax3,ax4,ax6)) = plt.subplots( 2, 3, figsize=( 13.0, 7.2 ) )
+    fig.subplots_adjust( left=0.03, bottom=0.02, right=0.95, top=0.97,
+                         wspace=0.1, hspace=0.05)
+    ax6.axis('off')
+
     #lons = 106
     lons = 111
     #lone = 164
@@ -48,7 +53,7 @@ def main( stime_l=[],
     late = 49
     lats = 16
         
-    ax_l_ = [ ax1, ax2, ax3, ax4, ax5, ax6, ax7, ax8 ]
+    ax_l_ = [ ax1, ax2, ax3, ax4, ax5,  ]
     ax_l = []
     for i, ax in enumerate( ax_l_ ):
  
@@ -57,7 +62,7 @@ def main( stime_l=[],
 
        delta = (vtime - stime).total_seconds()
 
-       if nvar == "RAIN" and i == 7:
+       if nvar == "RAIN" and i == 4:
           continue
 
        if delta < 0:
@@ -103,8 +108,8 @@ def main( stime_l=[],
 
        for m in range( 0, mmax ):
 
-           slp_ = get_var( INFO, nvar="MSLP", stime=stime, vtime=vtime, m=m+1, )
-           gph_ = get_var( INFO, nvar="Z", stime=stime, vtime=vtime, m=m+1, hpa=hpa )
+           slp_ = get_var( INFO, nvar="MSLP", stime=stime, vtime=vtime_slp, m=m+1, )
+           gph_ = get_var( INFO, nvar="Z", stime=stime, vtime=vtime_slp, m=m+1, hpa=hpa )
            var_ = get_var( INFO, nvar=nvar, stime=stime, vtime=vtime, m=m+1, adt=timedelta( hours=24 ), hpa=hpa )
 
 
@@ -118,7 +123,7 @@ def main( stime_l=[],
        print( '{0:}, max:{1:.2f}, min:{2:.2f}'.format( nvar, np.nanmax(var), np.nanmin(var) ) )
 
        ptit = 'Ini: {0:}'.format( stime.strftime('%HUTC %m/%d') )
-       if i == 7:
+       if i == 4:
           ptit = 'Analysis: {0:}'.format( stime.strftime('%HUTC %m/%d') )
 
        ax.text( 0.5, 0.95, ptit,
@@ -157,7 +162,6 @@ def main( stime_l=[],
    
     if nvar == "RAIN":
        # JMA
-       adth = 24
        adt = timedelta( hours=adth )
        jma2d, JMAr_lon, JMAr_lat = get_grads_JMA( vtime-adt , adth, ACUM=True )
    
@@ -166,37 +170,37 @@ def main( stime_l=[],
    
        lon2d_jma, lat2d_jma = np.meshgrid( JMAr_lon, JMAr_lat )
 
-       m_l = prep_proj_multi('merc', [ ax8 ], res=res, fs=6,
+       m_l = prep_proj_multi('merc', [ ax5 ], res=res, fs=6,
                               ll_lon=lons, ur_lon=lone, ll_lat=lats, ur_lat=late )
 
        x2d, y2d = m_l[0](lon2d_jma, lat2d_jma) 
 
-       SHADE = ax8.contourf( x2d, y2d, rain, 
+       SHADE = ax5.contourf( x2d, y2d, rain, 
                             levels=levs, cmap=cmap,
                             extend='both') #,extend )
 
        ptit = "JMA radar & analyzed MSLP"
-       ax8.text( 0.5, 0.95, ptit,
-                fontsize=9, transform=ax8.transAxes,
+       ax5.text( 0.5, 0.95, ptit,
+                fontsize=9, transform=ax5.transAxes,
                 ha='center', 
                 va='center',
                 bbox = bbox)
 
-       slp_ = get_var( INFO, nvar="MSLP", stime=vtime, vtime=vtime, m=0, )
+       slp_ = get_var( INFO, nvar="MSLP", stime=vtime_slp, vtime=vtime, m=0, )
        x2d, y2d = m_l[0](lon2d, lat2d)
-       CONT = ax8.contour( x2d, y2d, slp_, 
+       CONT = ax5.contour( x2d, y2d, slp_, 
                            colors=lc,
                            linewidths=lw, levels=clevs )
-       ax8.clabel( CONT, fontsize=6, fmt='%.0f' )
+       ax5.clabel( CONT, fontsize=6, fmt='%.0f' )
 
 
 
 #       if nvar == "PW":
 
     if nvar != "Z" and nvar != "MSLP":
-       pos = ax8.get_position()
-       cb_width = 0.006
-       cb_height = pos.height*1.5
+       pos = ax4.get_position()
+       cb_width = 0.008
+       cb_height = pos.height*0.95
        ax_cb = fig.add_axes( [pos.x1+0.005, pos.y0+0.01, cb_width, cb_height] )
        cb = plt.colorbar( SHADE, cax=ax_cb, orientation = 'vertical', ticks=levs[::2])
        cb.ax.tick_params( labelsize=8 )
@@ -205,13 +209,16 @@ def main( stime_l=[],
              ha='left', 
              va='bottom', )
 
-    ax4.text( 0.7, 1.01, "Valid: {0:}".format( vtime.strftime('%HUTC %m/%d') ),
-             fontsize=11, transform=ax4.transAxes,
+    ax5.text( 1.0, -0.3, "Rainfall period: {0:}-{1:}\nMSLP valid at {2:}".format( ( vtime-adt ).strftime('%HUTC %m/%d'),
+                           vtime.strftime('%HUTC %m/%d'),
+                           vtime_slp.strftime('%HUTC %m/%d'),
+                            ),
+             fontsize=10, transform=ax5.transAxes,
              ha='right', 
              va='bottom', )
 
  
-    ax_l = [ ax1, ax2, ax3, ax4, ax5, ax6, ax7, ax8 ]
+    ax_l = [ ax1, ax2, ax3, ax4, ax5,  ]
     pnum_l = [ "(a)", "(b)", "(c)", "(d)", "(e)", "(f)", "(g)", "(h)" ]
     for i, ax in enumerate( ax_l ):
        ax.text( 0.01, 0.99, pnum_l[i],
@@ -220,13 +227,15 @@ def main( stime_l=[],
                 bbox = bbox )
 
     
+       draw_rec( m_l[0], ax, slon, elon, slat, elat, lw=2.0, c='magenta' )
+
 
     tnvar = nvar_
     tnvar_ = nvar_
     if nvar == "RAIN":
        tnvar_ = nvar
        tnvar2 = "MSLP"
-       tnvar = "24-h precipitation amount"
+       tnvar = "{0:}-h accumulated precipitation amount".format( adth )
        tit = 'Forecast/observed {0:} & {1:}'.format( tnvar, tnvar2 ) 
     else:
        tnvar2 = "Z" + str(hpa)
@@ -240,7 +249,7 @@ def main( stime_l=[],
 
     fig.suptitle( tit, fontsize=14 )
         
-    opath = "png/fig0808"
+    opath = "png/5p_fcst_JMA_rain"
     ofig = "mean_{0:}_v{1:}".format( tnvar_, vtime.strftime('%H%m%d') ) 
 
     if not quick:
@@ -265,8 +274,6 @@ def main( stime_l=[],
 hpa = 950
 
 
-nvar = "RAIN"
-vtime = datetime( 2018, 7, 6, 0 )
 nvar = "PW"
 nvar = "RH"
 hpa = 500
@@ -276,11 +283,12 @@ nvar = "EPT"
 hpa = 950
 vtime = datetime( 2018, 7, 5, 0 )
 
+vtime = datetime( 2018, 7, 7, 0 )
+nvar = "RAIN"
+
+vtime_slp = datetime( 2018, 7, 5, 0 )
 
 stime_l = [ 
-            datetime( 2018, 6, 27, 0),
-            datetime( 2018, 6, 28, 0),
-            datetime( 2018, 6, 29, 0),
             datetime( 2018, 6, 30, 0),
             datetime( 2018, 7,  1, 0),
             datetime( 2018, 7,  2, 0),
@@ -288,7 +296,12 @@ stime_l = [
             vtime, 
           ]
 
+slon = 130.0
+elon = 137.5
+slat = 33.0 
+elat = 36.0
 
-main( stime_l=stime_l, vtime=vtime, nvar=nvar, hpa=hpa )
+main( stime_l=stime_l, vtime=vtime, vtime_slp=vtime_slp, nvar=nvar, hpa=hpa,
+      slon=slon, elon=elon, slat=slat, elat=elat, )
 
 
