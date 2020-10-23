@@ -83,7 +83,7 @@ def main( stime_l=[],
     lw = 0.5
 
 
-    cmap, levs, unit, extend, nvar_, fac = def_cmap( nvar=nvar, hpa=hpa )
+    cmap, levs, unit, extend, nvar_, fac = def_cmap( nvar=nvar, hpa=hpa, dth=adth )
     if nvar == "RAIN":
        cmap.set_under('lightgray',alpha=0.7 )
        extend = "both"

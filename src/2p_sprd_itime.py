@@ -14,7 +14,7 @@ from tools_BAIU import get_lonlat, get_var, prep_proj_multi, get_grads_JMA, def_
 
 
 quick = True   
-#quick = False
+quick = False
 
 
 

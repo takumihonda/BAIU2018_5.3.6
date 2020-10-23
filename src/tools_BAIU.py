@@ -11,6 +11,8 @@ from mpl_toolkits.basemap import Basemap
  
 from scipy import ndimage
 
+import matplotlib.colors as mcolors
+
 p00 = 100000.00 # hPa
 Rd = 287.04
 Rv = 461.51
@@ -42,7 +44,7 @@ def get_lonlat( INFO, stime=datetime(2018,7,1), ):
     return( lon, lat )
 
 def prep_proj_multi( METHOD, axs, res="c", ll_lon=120, ur_lon=150, ll_lat=20, ur_lat=50,
-                     fs=10,zorder=2,contc='burlywood',cont_alp=0.2 ):
+                     fs=10,zorder=2,contc='burlywood',cont_alp=0.2, cc='k' ):
 
 #    print("proj")
 
@@ -55,7 +57,6 @@ def prep_proj_multi( METHOD, axs, res="c", ll_lon=120, ur_lon=150, ll_lat=20, ur
 
 
     m_l = []
-    cc = "k"
     #contc = 'lightgrey'
     contc = contc
 
@@ -896,7 +897,7 @@ def def_cmap( nvar="RAIN", hpa=950, dth=24 ):
 
     elif nvar == "VORT":
        levs = np.arange( -10, 12, 2 )
-       unit = r'(10$^5$s$^{-1}$)'
+       unit = r'(10$^{-5}$s$^{-1}$)'
        fac = 1.e5
        extend = "both"
        cmap = plt.cm.get_cmap("RdBu_r")
@@ -1104,3 +1105,24 @@ def read_obsdep_letkf( time ):
 
     return( obsdep_all[:,1:12] )
 
+def read_Him8( time=datetime( 2018, 7, 5, 0 ) ):
+    fn = "/data9/honda/himawari_real/HIMAWARI-8/HISD/Hsfd/{0:}/00/B13/DLON0.02_DLAT0.02_HS_H08_{1:}_B13_FLDK.nc".format( time.strftime('%Y%m/%d/%Y%m%d0000'), time.strftime('%Y%m%d_%H00')  )
+  
+    with Dataset( fn, "r", format="NETCDF4") as nc:
+         tbb = nc.variables["tbb"][:]
+         lon = nc.variables["longitude"][:]
+         lat = nc.variables["latitude"][:]
+ 
+    lon2d, lat2d = np.meshgrid( lon, lat )
+   
+    return( tbb, lon2d, lat2d )
+
+def cmap_Him8():
+
+    colors1 = plt.cm.jet_r(np.linspace(0, 1, 128 ))
+    colors2 = plt.cm.binary(np.linspace(0., 1, 128 )) # w/k
+    colors = np.vstack((colors1, colors2))
+    cmap = mcolors.LinearSegmentedColormap.from_list('my_colormap', colors)
+    levs = np.arange( 200, 304, 4 )
+
+    return( cmap, levs )

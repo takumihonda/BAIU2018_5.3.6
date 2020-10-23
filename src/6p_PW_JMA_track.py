@@ -1,6 +1,5 @@
 import numpy as np
 
-from netCDF4 import Dataset
 from datetime import datetime
 from datetime import timedelta
 import os
@@ -9,10 +8,10 @@ import sys
 import matplotlib.pyplot as plt
 from mpl_toolkits.basemap import Basemap
  
-from tools_BAIU import get_lonlat, prep_proj_multi, get_mslp, get_pw, def_cmap, get_grads_JMA, draw_prapiroon
+from tools_BAIU import get_lonlat, prep_proj_multi, get_mslp, get_pw, def_cmap, get_grads_JMA, draw_prapiroon, read_Him8, cmap_Him8
 
 quick = True   
-#quick = False
+quick = False
 
 if quick:
    res="c"
@@ -20,7 +19,7 @@ else:
    res="l"
 
 
-def main( vtime_l=[], jvtime=datetime(2018, 7, 6, 0), adth=24 ):
+def main( vtime_l=[], jvtime=datetime(2018, 7, 6, 0), adth=24, hvtime=datetime( 2018, 7, 5, 0 ) ):
 
     TOP = "/data_ballantine02/miyoshi-t/honda/SCALE-LETKF/BAIU2018_5.3.6"
     
@@ -38,8 +37,8 @@ def main( vtime_l=[], jvtime=datetime(2018, 7, 6, 0), adth=24 ):
 
     fig, ((ax1,ax2,ax5), (ax3,ax4,ax6)) = plt.subplots( 2, 3, figsize=( 13.0, 6.0 ) )
     fig.subplots_adjust( left=0.03, bottom=0.02, right=0.95, top=0.97,
-                         wspace=0.1, hspace=0.03)
-    ax6.axis('off')
+                         wspace=0.2, hspace=0.1)
+#    ax6.axis('off')
 
     ax_l = [ ax1, ax2, ax3, ax4 ]
 
@@ -60,6 +59,9 @@ def main( vtime_l=[], jvtime=datetime(2018, 7, 6, 0), adth=24 ):
 
     m5_l = prep_proj_multi('merc', [ ax5 ], res=res, ll_lon=lons, ur_lon=lone, 
              ll_lat=lats, ur_lat=late, fs=8 )
+
+    m6_l = prep_proj_multi('merc', [ ax6 ], res=res, ll_lon=lons, ur_lon=lone, 
+             ll_lat=lats, ur_lat=late, fs=8, cc='lime' )
 
     cmap = plt.cm.get_cmap("GnBu")
     cmap = plt.cm.get_cmap("Blues")
@@ -92,7 +94,7 @@ def main( vtime_l=[], jvtime=datetime(2018, 7, 6, 0), adth=24 ):
                  verticalalignment='bottom',
                  ) #bbox = bbox)
 
-        ax.text( 0.0, 1.01, pnum_l[i],
+        ax.text( -0.05, 1.01, pnum_l[i],
                  fontsize=9, transform=ax.transAxes,
                  horizontalalignment='left', 
                  verticalalignment='bottom',
@@ -100,13 +102,13 @@ def main( vtime_l=[], jvtime=datetime(2018, 7, 6, 0), adth=24 ):
 
 
     pos = ax4.get_position()
-    cb_width = 0.008
-    cb_height = pos.height*0.95
-    ax_cb = fig.add_axes( [pos.x1+0.01, pos.y0+0.01, cb_width, cb_height] )
+    cb_width = 0.003
+    cb_height = pos.height*0.98
+    ax_cb = fig.add_axes( [pos.x1+0.005, pos.y0+0.01, cb_width, cb_height] )
     cb = plt.colorbar( SHADE, cax=ax_cb, orientation = 'vertical', ticks=levs[::2])
     cb.ax.tick_params( labelsize=8 )
  
-    ax4.text( 0.98, 1.01, r'(mm/m$^2$)',
+    ax4.text( 0.96, 1.01, r'(mm/m$^2$)',
               fontsize=8, transform=ax4.transAxes,
               horizontalalignment='left', 
               verticalalignment='bottom',
@@ -133,13 +135,13 @@ def main( vtime_l=[], jvtime=datetime(2018, 7, 6, 0), adth=24 ):
                           extend=extend)
 
     pos = ax5.get_position()
-    cb_width = 0.008
-    cb_height = pos.height*0.95
-    ax_cb = fig.add_axes( [pos.x1+0.01, pos.y0+0.01, cb_width, cb_height] )
+    cb_width = 0.004
+    cb_height = pos.height*0.98
+    ax_cb = fig.add_axes( [pos.x1+0.005, pos.y0+0.01, cb_width, cb_height] )
     cb = plt.colorbar( SHADE, cax=ax_cb, orientation = 'vertical', ticks=levs[::2])
-    cb.ax.tick_params( labelsize=8, )
+    cb.ax.tick_params( labelsize=7, )
  
-    ax5.text( 0.98, 1.01, "(mm/{0:}h)".format( adth ),
+    ax5.text( 1.0, 1.01, "(mm/{0:}h)".format( adth ),
               fontsize=8, transform=ax5.transAxes,
               horizontalalignment='left', 
               verticalalignment='bottom',
@@ -192,13 +194,51 @@ def main( vtime_l=[], jvtime=datetime(2018, 7, 6, 0), adth=24 ):
               verticalalignment='bottom',
               )
 
-    ax5.text( 0.0, 1.01, "(e)",
+    ax5.text( -0.05, 1.01, "(e)",
               fontsize=9, transform=ax5.transAxes,
               horizontalalignment='center', 
               verticalalignment='bottom',
               )
 
-    ofig = "5p_PW_JMA_track"
+    # Him8
+
+    cmap, levs = cmap_Him8()
+
+    tbb, lon2d_h, lat2d_h = read_Him8( time=hvtime ) 
+    x2d, y2d = m6_l[0]( lon2d_h, lat2d_h ) 
+
+    SHADE = ax6.contourf( x2d, y2d, tbb, levels=levs, cmap=cmap,
+                          extend=extend )
+
+    pos = ax6.get_position()
+    cb_width = 0.004
+    cb_height = pos.height*0.95
+    ax_cb = fig.add_axes( [pos.x1+0.01, pos.y0+0.01, cb_width, cb_height] )
+    cb = plt.colorbar( SHADE, cax=ax_cb, orientation = 'vertical', ticks=levs[::2])
+    cb.ax.tick_params( labelsize=8, )
+ 
+    ax6.text( 0.98, 1.01, "(K)",
+              fontsize=8, transform=ax6.transAxes,
+              ha='left', 
+              va='bottom',
+              )
+
+    ptit = "Himawari-8 B13 at {0:}".format( hvtime.strftime('%HUTC %m/%d') )
+
+    ax5.text( 0.5, 1.01, ptit,
+              fontsize=10, transform=ax6.transAxes,
+              horizontalalignment='center', 
+              verticalalignment='bottom',
+              )
+
+    ax5.text( -0.05, 1.01, "(f)",
+              fontsize=9, transform=ax6.transAxes,
+              horizontalalignment='center', 
+              verticalalignment='bottom',
+              )
+
+
+    ofig = "6p_PW_JMA_track"
     if not quick:
        opath = "png/fig1020"
        os.makedirs(opath, exist_ok=True)
