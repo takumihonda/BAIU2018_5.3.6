@@ -9,12 +9,12 @@ import sys
 import matplotlib.pyplot as plt
 from mpl_toolkits.basemap import Basemap
  
-from tools_BAIU import get_lonlat, prep_proj_multi, get_arain, get_var, def_cmap, draw_rec, draw_prapiroon
+from tools_BAIU import get_lonlat, prep_proj_multi, get_arain, get_var, def_cmap, draw_rec
 
 from scipy.interpolate import griddata
 
 quick = True   
-quick = False
+#quick = False
 
 
 def main( stime=datetime( 2018, 6, 30, 0), vtime_ref=datetime( 2018, 7, 6, 0 ),
@@ -75,7 +75,7 @@ def main( stime=datetime( 2018, 6, 30, 0), vtime_ref=datetime( 2018, 7, 6, 0 ),
 
     pnum_l = [ "(a)", "(b)", "(c)", "(d)" ] 
 
-    fig, ( ( ax1,ax2 ), (ax3,ax4) ) = plt.subplots( 2, 2, figsize=( 8, 6.5 ) )
+    fig, ( ax1,ax2 ) = plt.subplots( 1, 2, figsize=( 8, 4.5 ) )
     fig.subplots_adjust( left=0.05, bottom=0.05, right=0.95, top=0.95,
                          wspace=0.1, hspace=0.2)
 
@@ -87,11 +87,11 @@ def main( stime=datetime( 2018, 6, 30, 0), vtime_ref=datetime( 2018, 7, 6, 0 ),
     lons = 120
     lone = 151
     late = 42
-    lats = 20
+    lats = 16
 
 
     #ax_l = [ ax1, ax2, ax3, ax4, ]# ax5, ax6 ]
-    ax_l = [ ax1, ax2, ax3, ax4 ] # ax5, ax6 ]
+    ax_l = [ ax1, ax2, ] #ax3, ax4 ] # ax5, ax6 ]
     m_l = prep_proj_multi('merc', ax_l, ll_lon=lons, ur_lon=lone, 
                           ll_lat=lats, ur_lat=late, fs=6 )
 
@@ -138,6 +138,8 @@ def main( stime=datetime( 2018, 6, 30, 0), vtime_ref=datetime( 2018, 7, 6, 0 ),
 
     clevs = np.arange( -40, 45, 5 )
     clevs = np.arange( -20, 24, 4 )
+
+    clevs = np.arange( -10, 12, 2 )
 
     if nvar == "HDIV":
        clevs = np.arange( -5, 6, 1 )
@@ -187,15 +189,16 @@ def main( stime=datetime( 2018, 6, 30, 0), vtime_ref=datetime( 2018, 7, 6, 0 ),
 
        if i <= 1:
           dvar = ( var_ - mvar_ )*fac
-          dvar2 =  mvar2_*fac2
+          dvar2 =  var2_*fac2
        else:
           dvar = ( var_2 - mvar_2 )*fac
-          dvar2 =  mvar2_2*fac2
+          dvar2 =  var2_2*fac2
 
        SHADE = ax.contourf( x2d, y2d, dvar, 
                             cmap=cmap, levels=clevs, extend=extend )
 
        #CONT = ax.contour( x2d, y2d, ( var2_ - mvar2_ )*fac2, colors=lc,
+       levs2 = [ 5880 ]
        CONT = ax.contour( x2d, y2d,  dvar2, 
                           colors=lc,
                           linewidths=lw, levels=levs2, linestyles="solid" )
@@ -205,13 +208,7 @@ def main( stime=datetime( 2018, 6, 30, 0), vtime_ref=datetime( 2018, 7, 6, 0 ),
 
        draw_rec( m_l[0], ax, slon, elon, slat, elat,
                  c='k', lw=1.0, ls='solid' )
- 
-       if i <= 1:
-          ptime = datetime( 2018, 7, 3, 0 )
-          draw_prapiroon( m_l[i], ax, ptime, lw=0.0,
-                          c='magenta', ms=6.0, 
-                          label="Best track at\n{0:}".format( ptime.strftime('%HUTC %m/%d'))  ) 
-          ax.legend( loc='lower right', fontsize=10 )
+  
 
        if i == 1 or i == 3:
           pos = ax.get_position()
@@ -275,46 +272,18 @@ def main( stime=datetime( 2018, 6, 30, 0), vtime_ref=datetime( 2018, 7, 6, 0 ),
 
 #####################
 
-stime = datetime( 2018, 6, 30, 0)
-#stime = datetime( 2018, 6, 28, 0)
-#stime = datetime( 2018, 7, 1, 0)
-#stime = datetime( 2018, 7, 2, 0)
-stime = datetime( 2018, 7, 3, 0)
-
-vtime_l = [
-#           datetime( 2018, 6, 30, 0, 0 ),
-#           datetime( 2018, 7, 1, 0, 0 ),
-#           datetime( 2018, 7, 2, 0, 0 ),
-           datetime( 2018, 7, 3, 0, 0 ),
-           datetime( 2018, 7, 3, 12, 0 ),
-           datetime( 2018, 7, 4, 0, 0 ),
-           datetime( 2018, 7, 4, 12, 0 ),
-           datetime( 2018, 7, 5, 0, 0 ),
-#           datetime( 2018, 7, 6, 0, 0 ),
-#           datetime( 2018, 7, 7, 0, 0 ),
-          ]
-
-
-
 
 nvar_l = [
-          #"OLR", 
-          #"Q1_vg", 
-          #"HDIV", 
-          "VORT", 
-          #"V", 
+          "Z", 
          ]
 
 nvar2_l = [
           "Z", 
-          #"Z", 
           ]
  
 hpa_l = [  
-          850, 
-          #500, 
-          #700, 
-          #950, 
+          #850, 
+          500, 
         ]
 
 adt_h = 24
@@ -326,15 +295,25 @@ vtime_ref = datetime( 2018, 7, 7, 0 )
 # only for RAIN
 dth2 = 48
 
-vtime = datetime( 2018, 7, 3, 0 )
+stime = datetime( 2018, 6, 30, 0 )
+
+vtime = datetime( 2018, 6, 30, 0 )
+vtime2 = datetime( 2018, 7, 2, 0 )
 vtime2 = datetime( 2018, 7, 5, 0 )
 
-for i, nvar in enumerate( nvar_l ):
 
-        nvar2 = nvar2_l[i]
-        hpa = hpa_l[i]
-        hpa2 = hpa
+vtime = datetime( 2018, 7, 3, 0 )
+vtime2 = datetime( 2018, 7, 4, 0 )
+
+vtime = datetime( 2018, 6, 30, 0 )
+vtime2 = datetime( 2018, 7, 2, 0 )
+
+
+nvar = "MSLP"
+nvar2 = "Z"
+hpa = 500
+hpa2 = 500
     
-        main( stime=stime, vtime_ref=vtime_ref, vtime=vtime, vtime2=vtime2, nvar=nvar, nvar2=nvar2, 
-              hpa=hpa, hpa2=hpa2, adt_h=adt_h, dth2=dth2)
+main( stime=stime, vtime_ref=vtime_ref, vtime=vtime, vtime2=vtime2, nvar=nvar, nvar2=nvar2, 
+      hpa=hpa, hpa2=hpa2, adt_h=adt_h, dth2=dth2)
 

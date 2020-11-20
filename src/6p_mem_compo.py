@@ -14,7 +14,7 @@ from tools_BAIU import get_lonlat, prep_proj_multi, get_arain, get_var, def_cmap
 from scipy.interpolate import griddata
 
 quick = True   
-#quick = False
+quick = False
 
 TC = True
 TC = False
@@ -60,39 +60,41 @@ def main( stime=datetime( 2018, 6, 30, 0), vtime_ref=datetime( 2018, 7, 6, 0 ),
     print( mem_l )
     print( rain_l )
 
-    ptit_l = [ "Best {0:}".format( cmem ),
-               "Worst {0:}".format( cmem ), ]
+    ptit_l = [
+               "Best {0:}".format( cmem ),
+               "Worst {0:}".format( cmem ), 
+               "Best {0:}".format( cmem ),
+               "Worst {0:}".format( cmem ), 
+               "Best {0:}".format( cmem ),
+               "Worst {0:}".format( cmem ), 
+             ]
  
     pmem_l = [ 
                mem_l[0:cmem],  
-               mem_l[-cmem:] 
+               mem_l[-cmem:], 
+               mem_l[0:cmem],  
+               mem_l[-cmem:], 
+               mem_l[0:cmem],  
+               mem_l[-cmem:], 
              ]
 
-    pnum_l = [ "(a)", "(b)", "(c)", "(d)" ] 
+    pnum_l = [ "(a)", "(b)", "(c)", "(d)", "(e)", "(f)" ] 
 
-    fig, ( ax1,ax2 ) = plt.subplots( 1, 2, figsize=( 8, 3.5 ) )
-    fig.subplots_adjust( left=0.05, bottom=0.05, right=0.9, top=0.9,
-                         wspace=0.1, hspace=0.3)
+    fig, ( ( ax1,ax2 ), (ax3,ax4), (ax5,ax6) ) = plt.subplots( 3, 2, figsize=( 7.0, 8.5 ) )
+    fig.subplots_adjust( left=0.02, bottom=0.02, right=0.95, top=0.99,
+                         wspace=0.0, hspace=0.1)
 
     lons = 105 + 6
     lone = 165 - 6
     late = 50
     lats = 16
 
-    #ax_l = [ ax1, ax2, ax3, ax4, ]# ax5, ax6 ]
-    ax_l = [ ax1, ax2, ] # ax5, ax6 ]
+    ax_l = [ ax1, ax2, ax3, ax4, ax5, ax6 ]
     m_l = prep_proj_multi('merc', ax_l, ll_lon=lons, ur_lon=lone, 
                           ll_lat=lats, ur_lat=late, fs=6 )
 
     x2d, y2d = m_l[0](lon2d, lat2d)
 
-    dth_ = 0
-    if nvar == "RAIN":
-       dth_ = dth2
-    cmap, levs, unit, extend, nvar_, fac = def_cmap( nvar=nvar, hpa=hpa, dth=dth_ )
-
-    if nvar2 is not None:
-       cmap2, levs2, unit2, extend2, nvar2_, fac2 = def_cmap( nvar=nvar2, hpa=hpa2 )
 
     bbox = {'facecolor':'w', 'alpha':1.0, 'pad':2}
 
@@ -103,14 +105,50 @@ def main( stime=datetime( 2018, 6, 30, 0), vtime_ref=datetime( 2018, 7, 6, 0 ),
        lw = 1.0
 #    lc = 'w'
 
+    vtime_l = [
+               datetime( 2018, 7, 7, 0 ), 
+               datetime( 2018, 7, 7, 0 ), 
+               datetime( 2018, 7, 3, 0 ), 
+               datetime( 2018, 7, 3, 0 ), 
+               datetime( 2018, 7, 5, 0 ), 
+               datetime( 2018, 7, 5, 0 ), 
+              ]
+
+
+    nvar1_l = [ 
+               "RAIN", "RAIN", 
+               "OLR", "OLR",
+               "V", "V"
+               ]
+
+    nvar2_l = [ 
+               "MSLP", "MSLP", 
+               "MSLP", "MSLP", 
+               "Z", "Z", 
+              ]
 
     for i, ax in enumerate( ax_l ):
 #       m = pmem_l[i]
        m = 0
-       ptit = ptit_l[i]
+       ptit = ptit_l[i] 
 
-       ax.text( 0.5, 0.98, ptit,
-                fontsize=10, transform=ax.transAxes,
+
+       nvar = nvar1_l[i]
+       nvar2 = nvar2_l[i]
+       vtime = vtime_l[i]
+
+       dth_ = 0
+       if nvar == "RAIN":
+          dth_ = dth2
+       cmap, levs, unit, extend, nvar_, fac = def_cmap( nvar=nvar, hpa=hpa, dth=dth_ )
+
+
+       if nvar2 is not None:
+          cmap2, levs2, unit2, extend2, nvar2_, fac2 = def_cmap( nvar=nvar2, hpa=hpa2 )
+
+
+       ax.text( 0.5, 0.98, ptit + "\n" + nvar_,
+                fontsize=9, transform=ax.transAxes,
                 horizontalalignment='center', 
                 verticalalignment='top',
                 zorder=5,
@@ -137,61 +175,27 @@ def main( stime=datetime( 2018, 6, 30, 0), vtime_ref=datetime( 2018, 7, 6, 0 ),
       
        ax.clabel( CONT, fontsize=6, fmt='%.0f' )
  
-       if TC:
-          time_l = []
-          tcx_l = []
-          tcy_l = []
-          stime_ = vtime - timedelta( days=3 )
-          time = vtime
-          while time >= stime_:
-              mslp_ = get_var( INFO, nvar="MSLP", stime=stime, vtime=time, m=m+1,)
-              mslp_[ lon2d < 126.0 ] = np.nan
-              cy, cx = np.unravel_index( np.nanargmin(mslp_), mslp_.shape ) 
-              tcx, tcy = m_l[0]( lon2d[cy,cx], lat2d[cy,cx] )
-              tcx_l.append( tcx )
-              tcy_l.append( tcy )
-              time_l.append( time )
-              time -= timedelta( hours=6 )
-#          print( lon2d[cy,cx], lat2d[cy,cx] )
-          ax.plot( tcx_l, tcy_l, markersize=3, linewidth=2.0,
-                   color='cyan', marker='o' )
-
-          xof = -72
-          yof = 10
-
-          arrowprops = dict(
-             arrowstyle="->",
-             connectionstyle="angle,angleA=0,angleB=-45,rad=10",
-             color='cyan')
-
-          for j, time in enumerate( time_l ):
-             if j % 4 != 0:
-                continue
-             ax.annotate( "{0:}".format( time.strftime('%HUTC %m/%d') ),
-                           xy=( tcx_l[j], tcy_l[j] ),
-                           xytext=( xof, yof ),
-                           textcoords='offset points', #"'offset points', 
-                           arrowprops=arrowprops,
-                           fontsize=6,
-                           bbox=bbox )
 
        draw_rec( m_l[0], ax, slon, elon, slat, elat,
                  c='k', lw=1.0, ls='solid' )
   
 
-       if i == 1:
+       if i == 1 or i == 3 or i == 5: 
+          skip = 2
+          if i ==3: 
+             skip = 4
           pos = ax.get_position()
           cb_width = 0.01
           cb_height = pos.height*0.9
-          ax_cb = fig.add_axes( [pos.x1+0.005, pos.y1-cb_height, cb_width, cb_height] )
+          ax_cb = fig.add_axes( [pos.x1+0.005, pos.y0, cb_width, cb_height] )
           cb = plt.colorbar( SHADE, cax=ax_cb, 
-                             orientation = 'vertical', ticks=levs[::2] )
+                             orientation = 'vertical', ticks=levs[::skip] )
           cb.ax.tick_params( labelsize=7 )
 
-          ax.text( 0.95, 1.01, unit,
-                   fontsize=9, transform=ax.transAxes,
-                   horizontalalignment='left', 
-                   verticalalignment='bottom', )
+          ax.text( 1.01, 1.0, unit,
+                   fontsize=8, transform=ax.transAxes,
+                   ha='left', 
+                   va='top', )
 
        ax.text( 0.05, 0.98, pnum_l[i],
                 fontsize=10, transform=ax.transAxes,
@@ -202,17 +206,10 @@ def main( stime=datetime( 2018, 6, 30, 0), vtime_ref=datetime( 2018, 7, 6, 0 ),
 
 
  
-    if nvar2 is not None:
-       ofig = "2p_{0:}_{1:}_{2:}_adt{3:0=3}".format( nvar_, nvar2_, vtime.strftime('v%m%d%H'), adt_h, )
-       gtit = "{0:} & {1:}, init:{2:}, valid:{3:}".format( nvar_, nvar2_, stime.strftime('%HUTC %m/%d'), vtime.strftime('%HUTC %m/%d') )
-    else:
-       ofig = "4p_{0:}_{1:}_{2:0=3}".format( nvar_, vtime.strftime('v%H%m%d'), adt_h )
-       gtit = "{0:}, init:{1:}, valid:{2:}".format( nvar_, stime.strftime('%HUTC %m/%d'), vtime.strftime('%HUTC %m/%d') )
-   
-    fig.suptitle( gtit, fontsize=12)
+    ofig = "6p_RAIN_OLR_V"
 
     if not quick:
-       opath = "png/2p_cmem" + stime.strftime('_s%H%m%d_cmem') + str( cmem ).zfill(2)
+       opath = "png/6p_cmem" + stime.strftime('_s%H%m%d_cmem') + str( cmem ).zfill(2)
        os.makedirs(opath, exist_ok=True)
      
        ofig = os.path.join(opath, ofig + ".png")
@@ -296,8 +293,8 @@ nvar2_l = [
           ]
  
 hpa_l = [  
-          #850, 
-          950, 
+          850, 
+          #950, 
           #500, 
         ]
 
@@ -310,6 +307,8 @@ vtime_ref = datetime( 2018, 7, 7, 0 )
 # only for RAIN
 dth2 = 48
 
+cmem = 10
+
 for vtime in  vtime_l:
     for i, nvar in enumerate( nvar_l ):
 
@@ -318,5 +317,5 @@ for vtime in  vtime_l:
         hpa2 = hpa
     
         main( stime=stime, vtime_ref=vtime_ref, vtime=vtime, nvar=nvar, nvar2=nvar2, 
-              hpa=hpa, hpa2=hpa2, adt_h=adt_h, dth2=dth2)
+              hpa=hpa, hpa2=hpa2, adt_h=adt_h, dth2=dth2, cmem=cmem )
 

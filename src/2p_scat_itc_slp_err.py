@@ -81,6 +81,7 @@ def main(
 
     #for m in range( mmax ):
     for i, mem in enumerate( mem_l[:] ):
+        print( mem, rain_l[i])
 
         tclat_l_.append( tclat_l[mem,cit] )
         tclon_l_.append( tclon_l[mem,cit] )
@@ -101,8 +102,8 @@ def main(
 #    err_l[ tclat_l > 40.0 ] = np.nan
 
     #ax1.scatter( tclat_l_, rain_l )
-    ax1.scatter( tcslp_l, rain_l )
-    ax2.scatter( err_l, rain_l )
+    ax1.scatter( tcslp_l, rain_l, c=rain_l, cmap="jet" )
+    ax2.scatter( err_l, rain_l, c=rain_l, cmap="jet"  )
 #    ax1.scatter( tclon_l, rain_l )
 #    ax1.scatter( tclat_l, rain_l )
 
